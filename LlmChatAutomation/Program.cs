@@ -1,7 +1,6 @@
-﻿using NAudio.Lame;
+﻿using LlmChatAutomation;
+using NAudio.Lame;
 using NAudio.Wave;
-using OpenQA.Selenium;
-using SeleniumUndetectedChromeDriver;
 using System.Diagnostics;
 using System.Globalization;
 using System.Speech.Synthesis;
@@ -12,57 +11,29 @@ class Program
 
     static async Task Main()
     {
-        using (var driver = UndetectedChromeDriver.Create(driverExecutablePath: await new ChromeDriverInstaller().Auto()))
+        var chat = new Chat();
+
+        await chat.InitAsync();
+
+        chat.Start();
+
+        Thread.Sleep(2000);
+
+
+        while (true)
         {
-            driver.GoToUrl("https://chatgpt.com/");
+            chat.SkipLogoutPopup();
 
-            Thread.Sleep(2000); 
+            RecordVoice();
+            var prompt = TranscribeVoice();
 
-            while (true)
-            {
-                IJavaScriptExecutor js = driver;
-                js.ExecuteScript("window.scrollTo(0, document.body.scrollHeight);");
+            chat.SendPrompt(prompt);
 
-                Thread.Sleep(1000);
+            Thread.Sleep(3000);
 
-                try
-                {
-                    IWebElement stayLoggedInLink = driver.FindElements(By.TagName("a"))
-                        .FirstOrDefault(a => a.Text.Trim().Equals("Nie wylogowuj", StringComparison.OrdinalIgnoreCase));
+            var answer = chat.GetAnswer();
 
-                    if (stayLoggedInLink != null)
-                    {
-                        Console.WriteLine("Found 'Nie wylogowuj' link. Clicking it...");
-                        stayLoggedInLink.Click();
-                        Thread.Sleep(2000);
-                    }
-                }
-                catch (Exception e)
-                {
-                    Console.WriteLine($"Error finding/clicking 'Nie wylogowuj': {e.Message}");
-                }
-
-                IWebElement searchBox = driver.FindElement(By.Id("prompt-textarea"));
-
-                Random rnd = new Random();
-                //string prompt = questions[rnd.Next(questions.Count)];
-
-                RecordVoice();
-
-                var prompt = TranscribeVoice();
-
-                searchBox.SendKeys($"{prompt} . In one sentence.");
-
-                searchBox.Submit();
-
-                Thread.Sleep(3000);
-
-                var articles = driver.FindElements(By.TagName("article"));
-                var lastArticle = articles.Skip(Math.Max(0, articles.Count() - 1)).First();
-
-                var textToRead = lastArticle.Text.Replace("ChatGPT said", "");
-                ReadText(textToRead);
-            }
+            ReadText(answer);
         }
 
         // NOTE: very inaccurate transcription from audio source:
