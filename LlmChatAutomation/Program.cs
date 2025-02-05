@@ -7,10 +7,11 @@ using System.Speech.Synthesis;
 
 class Program
 {
-    static bool _pl = false;
+    static bool _pl = true;
 
     static async Task Main()
     {
+        var transcriber = new Transcriber();
         var chat = new Chat();
 
         await chat.InitAsync();
@@ -25,7 +26,7 @@ class Program
             chat.SkipLogoutPopup();
 
             RecordVoice();
-            var prompt = TranscribeVoice();
+            var prompt = transcriber.TranscribeVoice(_pl);
 
             chat.SendPrompt(prompt);
 
@@ -80,47 +81,6 @@ class Program
         }
 
         synthesizer.Speak(text);
-    }
-
-    private static string TranscribeVoice()
-    {
-        var language = _pl ? "Polish" : "English";
-
-        string exePath = @"C:\\Projects\\Faster-Whisper-XXL_r192.3.4_windows\\Faster-Whisper-XXL\\faster-whisper-xxl.exe";
-        string arguments = $@".\recorded.mp3 --language {language} --model medium --output_dir source";
-
-        ProcessStartInfo psi = new ProcessStartInfo
-        {
-            FileName = exePath,
-            Arguments = arguments,
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-            UseShellExecute = false,
-            CreateNoWindow = true
-        };
-
-        using (Process process = new Process { StartInfo = psi })
-        {
-            process.OutputDataReceived += (sender, e) => Console.WriteLine(e.Data);
-            process.ErrorDataReceived += (sender, e) => Console.WriteLine("Error: " + e.Data);
-
-            process.Start();
-            process.BeginOutputReadLine();
-            process.BeginErrorReadLine();
-
-            process.WaitForExit();
-        }
-
-        string filePath = "recorded.srt"; 
-
-        if (File.Exists(filePath))
-        {
-            string[] lines = File.ReadAllLines(filePath);
-
-            return lines[2];
-        }
-
-        return null;
     }
 
     static void RecordVoice()

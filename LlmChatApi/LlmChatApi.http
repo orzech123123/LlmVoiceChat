@@ -1,6 +1,6 @@
 @LlmChatApi_HostAddress = http://localhost:5027
 
-GET {{LlmChatApi_HostAddress}}/weatherforecast/
+GET {{LlmChatApi_HostAddress}}/chat/
 Accept: application/json
 
 ###
