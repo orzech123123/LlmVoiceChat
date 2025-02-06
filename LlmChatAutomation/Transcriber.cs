@@ -1,20 +1,15 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Diagnostics;
 
 namespace LlmChatAutomation
 {
     public class Transcriber
     {
-        public string TranscribeVoice(bool pl)
+        public string TranscribeVoice(bool pl, string filename)
         {
             var language = pl ? "Polish" : "English";
 
             string exePath = @"C:\\Projects\\Faster-Whisper-XXL_r192.3.4_windows\\Faster-Whisper-XXL\\faster-whisper-xxl.exe";
-            string arguments = $@".\recorded.mp3 --language {language} --model medium --output_dir source";
+            string arguments = $@".\{filename}.mp3 --language {language} --model medium --output_dir source";
 
             ProcessStartInfo psi = new ProcessStartInfo
             {
@@ -38,7 +33,7 @@ namespace LlmChatAutomation
                 process.WaitForExit();
             }
 
-            string filePath = "recorded.srt";
+            string filePath = $"{filename}.srt";
 
             if (File.Exists(filePath))
             {

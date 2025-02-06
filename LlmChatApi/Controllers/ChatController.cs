@@ -7,6 +7,8 @@ namespace LlmChatApi.Controllers
     [Route("[controller]")]
     public class ChatController : ControllerBase
     {
+        private bool _pl = false;
+
         private readonly ILogger<ChatController> _logger;
 
         public ChatController(ILogger<ChatController> logger)
@@ -22,7 +24,8 @@ namespace LlmChatApi.Controllers
                 return BadRequest("No file uploaded.");
             }
 
-            var filePath = Path.Combine(Directory.GetCurrentDirectory(), "recorded.mp3");
+            var filename = $"{Guid.NewGuid()}";
+            var filePath = Path.Combine(Directory.GetCurrentDirectory(), $"{filename}.mp3");
 
             try
             {
@@ -31,10 +34,29 @@ namespace LlmChatApi.Controllers
                     await file.CopyToAsync(stream);
                 }
 
+                var reader = new Reader();
                 var transcriber = new Transcriber();
-                var transcription = transcriber.TranscribeVoice(false);
 
-                return Ok("File uploaded successfully.");
+                var prompt = transcriber.TranscribeVoice(false, filename);
+
+
+                var chat = new Chat();
+
+                await chat.InitAsync();
+
+                chat.Start();
+
+                Thread.Sleep(2000);
+
+                chat.SendPrompt(prompt);
+
+                Thread.Sleep(6000);
+
+                var answer = chat.GetAnswer();
+
+                var outputAudio = reader.ReadText(_pl, answer, true);
+
+                return File(outputAudio, "audio/wav", "output.wav");
             }
             catch (Exception ex)
             {
@@ -48,16 +70,5 @@ namespace LlmChatApi.Controllers
         {
             return Ok();
         }
-            //var chat = new Chat();
-
-            //await chat.InitAsync();
-
-            //chat.Start();
-
-            //Thread.Sleep(2000);
-
-            //chat.SendPrompt("hi!");
-
-            //Thread.Sleep(2000);
     }
 }
