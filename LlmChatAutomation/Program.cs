@@ -23,7 +23,6 @@ class Program
 
         Thread.Sleep(2000);
 
-
         while (true)
         {
             chat.SkipLogoutPopup();

@@ -7,6 +7,7 @@ namespace LlmChatApi.Controllers
     [Route("[controller]")]
     public class ChatController : ControllerBase
     {
+        private static Chat _chat;
         private bool _pl = false;
 
         private readonly ILogger<ChatController> _logger;
@@ -19,6 +20,8 @@ namespace LlmChatApi.Controllers
         [HttpPost("upload")]
         public async Task<IActionResult> UploadAudioFile(IFormFile file)
         {
+            await InitChatAsync();
+
             if (file == null || file.Length == 0)
             {
                 return BadRequest("No file uploaded.");
@@ -39,20 +42,13 @@ namespace LlmChatApi.Controllers
 
                 var prompt = transcriber.TranscribeVoice(false, filename);
 
-
-                var chat = new Chat();
-
-                await chat.InitAsync();
-
-                chat.Start();
-
                 Thread.Sleep(2000);
 
-                chat.SendPrompt(prompt);
+                _chat.SendPrompt(prompt);
 
                 Thread.Sleep(6000);
 
-                var answer = chat.GetAnswer();
+                var answer = _chat.GetAnswer();
 
                 var outputAudio = reader.ReadText(_pl, answer, true);
 
@@ -64,11 +60,24 @@ namespace LlmChatApi.Controllers
             }
         }
 
-
         [HttpGet]
-        public IActionResult Get()
+        public async Task<IActionResult> Get()
         {
+            await InitChatAsync();
+
             return Ok();
+        }
+
+        private async Task InitChatAsync()
+        {
+            if (_chat == null)
+            {
+                _chat = new Chat();
+
+                await _chat.InitAsync();
+
+                _chat.Start();
+            }
         }
     }
 }
