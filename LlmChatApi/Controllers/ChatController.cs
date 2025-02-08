@@ -8,7 +8,7 @@ namespace LlmChatApi.Controllers
     public class ChatController : ControllerBase
     {
         private static Chat _chat;
-        private bool _pl = false;
+        private bool _pl = true;
 
         private readonly ILogger<ChatController> _logger;
 
@@ -40,7 +40,7 @@ namespace LlmChatApi.Controllers
                 var reader = new Reader();
                 var transcriber = new Transcriber();
 
-                var prompt = transcriber.TranscribeVoice(false, filename);
+                var prompt = transcriber.TranscribeVoice(_pl, filename);
 
                 Thread.Sleep(2000);
 
@@ -77,6 +77,11 @@ namespace LlmChatApi.Controllers
                 await _chat.InitAsync();
 
                 _chat.Start();
+
+                Thread.Sleep(2000);
+
+                _chat.SendPrompt("jestes starozytnym artefaktem na pustyni, mistycznym orbem, zakletym w piaskach czasu, bedziesz gadal z przechodniami," +
+                    "Jestes wszechwiecznym Orbem ktory przepowiada, Reptilskim wynalazkiem przeszlosci, potwierdz TAK ze rozumiesz");
             }
         }
     }
